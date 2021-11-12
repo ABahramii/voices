@@ -2,12 +2,22 @@ import pyaudio
 import os
 import struct
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import time
 from tkinter import TclError
 
-# use this backend to display in separate Tk window
-# %matplotlib tk
+
+CO = True
+end_time = time.time()
+
+def on_close(event):
+    global CO
+    global end_time
+    event.canvas.figure.axes[0].has_been_closed = True
+    print("CLOSED")
+    CO = False
+    end_time = time.time()
 
 # constants
 CHUNK = 1024 * 2             # samples per frame
@@ -16,7 +26,11 @@ CHANNELS = 1                 # single channel for microphone
 RATE = 44100                 # samples per second
 
 # create matplotlib figure and axes
+# matplotlib.use('Agg')
 fig, ax = plt.subplots(1, figsize=(15, 7))
+fig.canvas.mpl_connect('close_event', on_close)
+# ax.canvas.mpl_connect('close_event', on_close)
+# fig.canvas.mpl_connect('close_event', handle_close)
 
 # pyaudio class instance
 p = pyaudio.PyAudio()
@@ -54,30 +68,25 @@ print('stream started')
 frame_count = 0
 start_time = time.time()
 
-while True:
-
+while CO:
     # binary data
+    # print(CO)
     data = stream.read(CHUNK)
-
     # convert data to integers, make np array, then offset it by 127
     data_int = struct.unpack(str(2 * CHUNK) + 'B', data)
-
+    
     # create np array and offset by 128
     data_np = np.array(data_int, dtype='b')[::2] + 128
-
+    
     line.set_ydata(data_np)
-
+    
     # update figure canvas
-    try:
-        fig.canvas.draw()
-        fig.canvas.flush_events()
-        frame_count += 1
+    fig.canvas.draw()
+    fig.canvas.flush_events()
+    frame_count += 1
 
-    except TclError:
+# calculate average frame rate
+frame_rate = frame_count / (end_time - start_time)
+print('stream stopped')
+print('average frame rate = {:.0f} FPS'.format(frame_rate))
 
-        # calculate average frame rate
-        frame_rate = frame_count / (time.time() - start_time)
-
-        print('stream stopped')
-        print('average frame rate = {:.0f} FPS'.format(frame_rate))
-        break

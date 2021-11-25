@@ -3,7 +3,6 @@ import struct  # unpacked audio data into integers instead of binary numbers
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from tkinter import TclError
 
 CO = True
 end_time = time.time()
@@ -19,6 +18,7 @@ def on_close(event):
 def start():
     global CO
     CO = True
+
     # how many voice(byte) process on a time -> audio samples per frame
     CHUNK = 1024 * 2  # 2048 samples per chunk
     FORMAT = pyaudio.paInt16  # bit depth
@@ -82,6 +82,7 @@ def start():
         fig.canvas.draw()
         fig.canvas.flush_events()
         frame_count += 1
+    # end while
 
     # calculate average frame rate
     frame_rate = frame_count / (end_time - start_time)
